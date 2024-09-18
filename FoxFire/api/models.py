@@ -38,7 +38,7 @@ class Question(models.Model):
         Survey, on_delete=models.CASCADE, related_name="questions"
     )
     text = models.TextField()
-    order = models.IntegerField(default=0)
+    order = models.IntegerField(default=0,blank=True,null=True)
 
     def __str__(self):
         return f"{self.survey.title} - Question {self.order}"

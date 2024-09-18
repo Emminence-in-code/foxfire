@@ -10,6 +10,8 @@ from .views import (
     AnnouncementViewSet,
     WithdrawRequestViewSet,
     ExchangeRateViewSet,
+    CustomLoginView,
+    CreateUserView,
 )
 
 router = DefaultRouter()
@@ -23,6 +25,10 @@ router.register(r"announcements", AnnouncementViewSet)
 router.register(r"withdraw-requests", WithdrawRequestViewSet)
 router.register(r"exchange-rates", ExchangeRateViewSet)
 
+
+# for authentication
 urlpatterns = [
     path("", include(router.urls)),
+    path("auth/signup", CreateUserView.as_view()),
+    path("auth/login", CustomLoginView.as_view()),
 ]

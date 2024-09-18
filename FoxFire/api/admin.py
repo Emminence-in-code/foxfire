@@ -6,6 +6,7 @@ from .models import (
     Question,
     WithdrawRequest,
     ExchangeRate,
+    Survey,
 )
 
 
@@ -17,6 +18,7 @@ admin.site.register(
         Category,
         Question,
         WithdrawRequest,
+        Survey,
         ExchangeRate,
     ]
 )

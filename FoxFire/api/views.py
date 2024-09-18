@@ -120,13 +120,6 @@ class CustomLoginView(TokenObtainPairView):
         user = authenticate(request, email=email, password=password)
 
         if user is not None:
-            # Check if the user has an associated profile with an apartment
-            profile = Profile.objects.filter(user=user).first()
-            if profile is None or profile.apartment is None:
-                return Response(
-                    {"error": "User doesn't have an apartment"},
-                    status=status.HTTP_401_UNAUTHORIZED,
-                )
 
             # Generate JWT tokens
             refresh = RefreshToken.for_user(user)

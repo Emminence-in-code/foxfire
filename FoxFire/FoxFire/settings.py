@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import timedelta
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -27,6 +28,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "api",
     "rest_framework",
+    "forgot_password",
     "corsheaders",
     "custom_auth",
     "notifications_and_messages",
@@ -134,7 +136,6 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         # other authentication classes...
     ],
-    # other settings...
 }
 MEDIA_URL = "/media/"
 
@@ -156,3 +157,16 @@ STORAGES = {
     },
 }
 AUTH_USER_MODEL = "custom_auth.CustomUser"
+
+
+# EMAIL SETTINGS
+# TODO test email functionality
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+# EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_HOST_USER = "bigpapermarketing@gmail.com"
+EMAIL_HOST_PASSWORD = "kwcwflpmfhpkqbuy"
+EMAIL_PORT = 465
+EMAIL_USE_TLS = False
+EMAIL_USE_SSL = True
+EMAIL_TIMEOUT = 50

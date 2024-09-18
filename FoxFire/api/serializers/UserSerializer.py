@@ -1,4 +1,3 @@
-from api.models import Profile
 from custom_auth.models import CustomUser
 from rest_framework.serializers import (
     ModelSerializer,
@@ -39,18 +38,3 @@ class UserDetailSerializer(ModelSerializer):
     class Meta:
         model = CustomUser
         exclude = ("id", "password")
-
-
-class ProfileSerializer(ModelSerializer):
-    user = UserDetailSerializer()
-
-    class Meta:
-        model = Profile
-        fields = (
-            "user",
-            "wallet",
-            "image",
-        )
-
-
-#

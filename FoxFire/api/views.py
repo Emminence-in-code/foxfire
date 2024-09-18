@@ -1,10 +1,55 @@
 from django.shortcuts import render
-from api.serializers.UserSerializer import UserSerializer
 from custom_auth.models import CustomUser
 from rest_framework import generics
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.response import Response
 from rest_framework import views
+from rest_framework import status
+from django.shortcuts import render
+from api.serializers import UserSerializer
+
+# from django.contrib.auth import
+from custom_auth.models import CustomUser
+from rest_framework import generics, decorators
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework import views, decorators
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth import authenticate
+from rest_framework.mixins import RetrieveModelMixin
+from rest_framework.permissions import IsAuthenticated
+
+
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from .models import (
+    Task,
+    Category,
+    Survey,
+    Question,
+    UserResponse,
+    SurveyCompletion,
+    Announcement,
+    WithdrawRequest,
+    ExchangeRate,
+)
+from .serializers.serializers import (
+    TaskSerializer,
+    CategorySerializer,
+    SurveySerializer,
+    QuestionSerializer,
+    UserResponseSerializer,
+    SurveyCompletionSerializer,
+    AnnouncementSerializer,
+    WithdrawRequestSerializer,
+    ExchangeRateSerializer,
+)
+
+from api.serializers import UserSerializer
+
 
 # Create your views here.
 
@@ -12,63 +57,154 @@ from rest_framework import views
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     queryset = CustomUser.objects.all()
-    refresh_token: RefreshToken = RefreshToken()
 
     def post(self, request, *args, **kwargs):
-        qs = super().post(request, *args, **kwargs)
-        user_data = qs.data
-        # ! get user model instance for token generation
-        user_obj = CustomUser.objects.get(email=user_data.get("email"))
+        if CustomUser.objects.filter(username=request.data.get("username")).exists():
+            return Response(
+                {"error": "username already exists"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
 
-        # ! GENERATE TOKENS AND APPEND THEM TO RESPONSE DATA
-        if user_obj:
-            token_pair = self.refresh_token.for_user(user_obj)
-            qs.data["refresh"] = str(token_pair)
-            qs.data["access"] = str(token_pair.access_token)
-            return Response(qs)
+        if CustomUser.objects.filter(username=request.data.get("email")).exists():
+            return Response(
+                {"error": "Account with email already exists"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        response = super().post(request, *args, **kwargs)
+        user_data = response.data
+        # Get the user instance for token generation
+        try:
+            user_obj = CustomUser.objects.get(email=user_data.get("email"))
+            # Generate tokens
+            token_pair = RefreshToken.for_user(user_obj)
+            response_data: dict = {
+                "refresh": str(token_pair),
+                "access": str(token_pair.access_token),
+                "username": user_obj.username,
+                "email": user_obj.email,
+                "image": "",
+            }
+            return Response(response_data, status=status.HTTP_201_CREATED)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {"detail": "User not found."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class GetUserApiView(RetrieveModelMixin, generics.GenericAPIView):
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = ""
+
+    def get_queryset(self):
+        # Return a queryset with just the authenticated user
+        return self.request.user
+
+    def get_object(self):
+        # Get the first object from the queryset
+        queryset = self.get_queryset()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        # Handle GET request
+        return self.retrieve(request, *args, **kwargs)
+
+
+class CustomLoginView(TokenObtainPairView):
+    def post(self, request, *args, **kwargs):
+        email = request.data.get("email")
+        password = request.data.get("password")
+
+        # Authenticate the user
+        user = authenticate(request, email=email, password=password)
+
+        if user is not None:
+            # Check if the user has an associated profile with an apartment
+            profile = Profile.objects.filter(user=user).first()
+            if profile is None or profile.apartment is None:
+                return Response(
+                    {"error": "User doesn't have an apartment"},
+                    status=status.HTTP_401_UNAUTHORIZED,
+                )
+
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            data = {
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "username": user.username,
+                "email": user.email,
+                "profile_picture": user.profile_picture if user.profile_picture else "",
+            }
+            return Response(data, status=status.HTTP_200_OK)
         else:
-            return Response(status=400)
+            return Response(
+                {"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED
+            )
 
 
-# class UserFullControlView(ModelViewSet):
-#     queryset = CustomUser.objects.all()
-#     serializer_class = UserDetailSerializer
-#     permission_classes = [IsAdminUser]
+# views for adding tasks
 
 
-# class PasswordRecoveryView(views.APIView):
-#     def post(self, request, *args, **kwargs):
-#         try:
-#             token = request.data.get("token")
-#             new_password = request.data.get("new_password")
-#             email = request.data.get("email")
-#             # * NEW PASSWORD WILL BE VALIDATED FROM THE FRONT END
-#             token_instance = PasswordTokens.objects.get(user__email=email)
-#             if token == token_instance.token:
-#                 token_instance.user.set_password(new_password)
-#                 return Response(status=200)
-#             else:
-#                 return Response({"error": "incorrect token"}, status=404)
-#         except Exception as e:
-#             return Response({"error": f"error occured [{e}]"}, status=400)
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
 
-#     def get(self, request, *args, **kwargs):
-#         email = request.GET.get("email")
-#         if email:
-#             try:
-#                 # ! CHECK IF ACCOUNT WITH EMAIL EXISTS
-#                 qs = CustomUser.objects.filter(email=email)
-#                 if not qs.exists():
-#                     return Response(
-#                         {"error": "account with the given mail doesnt exist"},
-#                         status=404,
-#                     )
-#                 # todo generate recovery token using email and send it to the users email
-#                 PasswordTokens.objects.create(user=qs[0])
-#                 return Response(
-#                     {"data": "Recovery token has succesfully been sent to your email"},
-#                     status=200,
-#                 )
-#             except Exception as e:
-#                 return Response({"error": f"error occured [{e}]"}, status=400)
-#         return Response("email cant be empty")
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = [IsAuthenticated]
+
+
+class SurveyViewSet(viewsets.ModelViewSet):
+    queryset = Survey.objects.all()
+    serializer_class = SurveySerializer
+    permission_classes = [IsAuthenticated]
+
+
+class QuestionViewSet(viewsets.ModelViewSet):
+    queryset = Question.objects.all()
+    serializer_class = QuestionSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class UserResponseViewSet(viewsets.ModelViewSet):
+    queryset = UserResponse.objects.all()
+    serializer_class = UserResponseSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return UserResponse.objects.filter(user=self.request.user)
+
+
+class SurveyCompletionViewSet(viewsets.ModelViewSet):
+    queryset = SurveyCompletion.objects.all()
+    serializer_class = SurveyCompletionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return SurveyCompletion.objects.filter(user=self.request.user)
+
+
+class AnnouncementViewSet(viewsets.ModelViewSet):
+    queryset = Announcement.objects.all()
+    serializer_class = AnnouncementSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class WithdrawRequestViewSet(viewsets.ModelViewSet):
+    queryset = WithdrawRequest.objects.all()
+    serializer_class = WithdrawRequestSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return WithdrawRequest.objects.filter(user=self.request.user)
+
+
+class ExchangeRateViewSet(viewsets.ModelViewSet):
+    queryset = ExchangeRate.objects.all()
+    serializer_class = ExchangeRateSerializer
+    permission_classes = [IsAuthenticated]

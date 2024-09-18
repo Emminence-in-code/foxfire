@@ -25,7 +25,7 @@ class Notifications(models.Model):
 
 class Messages(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender")
-    reciever = models.CharField(max_length=200)
+    reciever = models.CharField(max_length=200,default='admin')
     # todo should be created based on the contetatenation of the two users in the chat as a slug or the name of the group or room holding a meeting
     message = models.TextField()
     time = models.DateTimeField(auto_now_add=True)

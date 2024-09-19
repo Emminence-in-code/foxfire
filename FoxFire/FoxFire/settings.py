@@ -15,7 +15,7 @@ SECRET_KEY = "django-insecure-z8n3-m1#gwfef42_qdxpqnq75f)0d8t#lv0_00ge3(ud6e#()8
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -140,8 +140,8 @@ REST_FRAMEWORK = {
 }
 MEDIA_URL = "/media/"
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = "static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3.S3Storage",

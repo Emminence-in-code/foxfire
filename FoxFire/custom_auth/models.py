@@ -16,13 +16,16 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-
-
+    phone_number = models.CharField(null=True, blank=True, max_length=200)
+    first_name = models.CharField(null=True, blank=True, max_length=200)
+    last_name = models.CharField(null=True, blank=True, max_length=200)
     verified_phone_number = models.BooleanField(default=False)
     verified_email_address = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to="files")
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["username", ]
+    REQUIRED_FIELDS = [
+        "username",
+    ]
 
     objects = CustomUserManager()
 

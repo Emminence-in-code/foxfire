@@ -1,5 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+from rest_framework_simplejwt.views import TokenRefreshView,TokenVerifyView
 from .views import (
     TaskViewSet,
     CategoryViewSet,
@@ -31,4 +32,6 @@ urlpatterns = [
     path("", include(router.urls)),
     path("auth/signup", CreateUserView.as_view()),
     path("auth/login", CustomLoginView.as_view()),
+    path("auth/refresh", TokenRefreshView.as_view()),
+    path("auth/verify", TokenVerifyView.as_view()),
 ]

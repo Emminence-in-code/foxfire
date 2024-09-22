@@ -48,7 +48,7 @@ from .serializers.serializers import (
     ExchangeRateSerializer,
 )
 
-from api.serializers import UserSerializer
+from api.serializers.UserSerializer import UserSerializer
 
 
 # Create your views here.
@@ -57,6 +57,10 @@ from api.serializers import UserSerializer
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     queryset = CustomUser.objects.all()
+
+    def get(self, request, *args, **kwargs):
+        print("yoo")
+        return Response()
 
     def post(self, request, *args, **kwargs):
         if CustomUser.objects.filter(username=request.data.get("username")).exists():

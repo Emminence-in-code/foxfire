@@ -16,6 +16,7 @@ from .views import (
     CreateUserView,
     DeleteUserAccountView,
     SubmitSurveyResponse,
+    GetAdsRewardView,
 )
 
 router = DefaultRouter()
@@ -35,6 +36,7 @@ router.register(r"exchange-rates", ExchangeRateViewSet)
 urlpatterns = [
     path("", include(router.urls)),
     path("me", GetUserApiView.as_view()),
+    path("ads", GetAdsRewardView.as_view()),
     path("delete", DeleteUserAccountView.as_view()),
     path("auth/signup", CreateUserView.as_view()),
     path("auth/login", CustomLoginView.as_view()),

@@ -1,6 +1,7 @@
 from django.db import models
 from custom_auth.models import CustomUser
 import random, string
+from django.core.exceptions import ValidationError
 
 
 # Create your models here.
@@ -28,12 +29,24 @@ class Survey(models.Model):
     image = models.ImageField(upload_to="surveys")
     description = models.TextField()
     reward = models.IntegerField(default=0)
+    upload_complete = models.BooleanField(default=False)
 
     def get_total_questions_count(self):
         return self.questions.count()
 
     def get_answered_questions_count(self, user):
         return UserResponse.objects.filter(user=user, question__survey=self).count()
+
+    def save(self, *args, **kwargs):
+        # Prevent saving if the survey is already marked as complete
+        if self.pk is not None:  # Check if the object already exists in the database
+            original = Survey.objects.get(pk=self.pk)
+            if original.upload_complete:
+                raise ValidationError(
+                    "This survey is no longer editable as it has been marked complete."
+                )
+
+        super().save(*args, **kwargs)
 
 
 class Question(models.Model):
@@ -123,5 +136,5 @@ class Referral(models.Model):
         if not self.code:
             self.code = self.generate_code()
             print(self.code)
-            
+
         return super().save(*args, **kwargs)

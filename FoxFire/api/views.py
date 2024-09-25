@@ -55,6 +55,7 @@ from .serializers.serializers import (
 
 from api.serializers.UserSerializer import UserSerializer, UserDetailSerializer
 
+import random
 
 # Create your views here.
 
@@ -325,3 +326,13 @@ class SubmitSurveyResponse(APIView):
             {"completed": False, "answered_questions": answered_questions_count},
             status=200,
         )
+
+
+class GetAdsRewardView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user_wallet = request.user.wallet_set.first()
+        reward = random.randint(200, 300)
+        deposit(user_wallet, reward)
+        return Response()

@@ -84,7 +84,7 @@ def delete_withdraw_request(sender, instance: WithdrawRequest, *args, **kwargs):
 
 
 @receiver(post_save, sender=ExchangeRate)
-def notify_withdraw_request(sender, instance: ExchangeRate, created, *args, **kwargs):
+def notify_rates_request(sender, instance: ExchangeRate, created, *args, **kwargs):
     users = User.objects.all()
     for user in users:
         send_notification(

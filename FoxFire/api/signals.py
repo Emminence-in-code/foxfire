@@ -6,7 +6,7 @@ from wallet.models import Wallet
 from api.transacions import deposit
 from .models import Referral
 from api.models import WithdrawRequest, ExchangeRate, Task, Survey
-
+from custom_auth.models import CustomUser
 User = settings.AUTH_USER_MODEL
 from notifications_and_messages.models import send_notification
 
@@ -85,7 +85,7 @@ def delete_withdraw_request(sender, instance: WithdrawRequest, *args, **kwargs):
 
 @receiver(post_save, sender=ExchangeRate)
 def notify_rates_request(sender, instance: ExchangeRate, created, *args, **kwargs):
-    users = User.objects.all()
+    users = CustomUser.objects.all()
     for user in users:
         send_notification(
             title="Update in Rates",

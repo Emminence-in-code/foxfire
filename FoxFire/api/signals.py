@@ -29,7 +29,7 @@ def create_profile_on_save(sender, instance: User, created, *args, **kwargs):
 def notify_user_of_new_task(sender, instance, created, *args, **kwargs):
     # notify all users
     if created:
-        users = User.objects.all()
+        users = CustomUser.objects.all()
         for user in users:
             send_notification(
                 title="There's a new task",
@@ -42,7 +42,7 @@ def notify_user_of_new_task(sender, instance, created, *args, **kwargs):
 def notify_user_of_new_survey(sender, instance: Survey, created, *args, **kwargs):
     if instance.upload_complete:
         # notify all users
-        users = User.objects.all()
+        users = CustomUser.objects.all()
         for user in users:
             send_notification(
                 title="New Survey",

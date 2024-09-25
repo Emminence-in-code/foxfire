@@ -17,11 +17,13 @@ from .views import (
     DeleteUserAccountView,
     SubmitSurveyResponse,
     GetAdsRewardView,
+    TaskSubmitViewSet,
 )
 
 router = DefaultRouter()
 router.register(r"tasks", TaskViewSet)
 router.register(r"categories", CategoryViewSet)
+router.register(r"task-submit", TaskSubmitViewSet)
 router.register(r"surveys", SurveyViewSet)
 router.register(r"questions", QuestionViewSet)
 router.register(r"user-responses", UserResponseViewSet)

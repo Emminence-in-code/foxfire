@@ -8,6 +8,7 @@ from rest_framework import views
 from rest_framework import status
 from django.shortcuts import render
 from api.serializers import UserSerializer
+from notifications_and_messages.models import send_notification
 from .transacions import deposit, withdraw
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
@@ -40,6 +41,7 @@ from .models import (
     Announcement,
     WithdrawRequest,
     ExchangeRate,
+    TaskSubmit,
 )
 from .serializers.serializers import (
     TaskSerializer,
@@ -48,6 +50,7 @@ from .serializers.serializers import (
     QuestionSerializer,
     UserResponseSerializer,
     SurveyCompletionSerializer,
+    TaskSubmitSerializer,
     AnnouncementSerializer,
     WithdrawRequestSerializer,
     ExchangeRateSerializer,
@@ -97,6 +100,11 @@ class CreateUserView(generics.CreateAPIView):
                     ref = Referral.objects.get(code=request.data.get("referral_code"))
                     ref.use_code()
                     deposit(ref.user.wallet_set.first(), 300)
+                    send_notification(
+                        title="Invitation accepted",
+                        user=ref.user,
+                        notification=f"{user_obj.username} accepted your invitation and has used your referral code",
+                    )
             except:
                 pass
 
@@ -186,6 +194,12 @@ class SurveyViewSet(viewsets.ModelViewSet):
 class QuestionViewSet(viewsets.ModelViewSet):
     queryset = Question.objects.all()
     serializer_class = QuestionSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class TaskSubmitViewSet(viewsets.ModelViewSet):
+    queryset = TaskSubmit.objects.all()
+    serializer_class = TaskSubmitSerializer
     permission_classes = [IsAuthenticated]
 
 
@@ -316,6 +330,11 @@ class SubmitSurveyResponse(APIView):
             # Fund user for completing the survey
             user_wallet: Wallet = user.wallet_set.first()
             deposit(user_wallet, survey.reward)
+            send_notification(
+                user=user,
+                title="Survey Completed",
+                notification=f"Survey completed you have earned {survey.reward} for this survey",
+            )
             return Response(
                 {"completed": True, "answered_questions": answered_questions_count},
                 status=200,
@@ -335,4 +354,10 @@ class GetAdsRewardView(APIView):
         user_wallet = request.user.wallet_set.first()
         reward = random.randint(200, 300)
         deposit(user_wallet, reward)
+        send_notification(
+            title="Ads Rewarded",
+            user=self.request.user,
+            notification="You have earned from watching ads,check your balance",
+        )
+
         return Response()

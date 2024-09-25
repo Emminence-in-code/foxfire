@@ -8,7 +8,7 @@ from api.models import (
     SurveyCompletion,
     Announcement,
     WithdrawRequest,
-    ExchangeRate,
+    ExchangeRate,TaskSubmit
 )
 from .UserSerializer import UserSerializer as CustomUserSerializer
 
@@ -78,3 +78,10 @@ class ExchangeRateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExchangeRate
         fields = "__all__"
+
+
+class TaskSubmitSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TaskSubmit
+        fields = "__all__"
+

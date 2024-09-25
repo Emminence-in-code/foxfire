@@ -41,6 +41,7 @@ class UserDetailSerializer(ModelSerializer):
     completed_tasks_count = SerializerMethodField()
     completed_surveys_count = SerializerMethodField()
     referrers_count = SerializerMethodField()
+    referral_code = SerializerMethodField()
 
     class Meta:
         model = CustomUser
@@ -55,10 +56,10 @@ class UserDetailSerializer(ModelSerializer):
             "completed_tasks_count",
             "completed_surveys_count",
             "referrers_count",
+            "referral_code",
         ]
 
     def get_balance(self, instance):
-        print(instance.wallet_set.first())
         wallet: Wallet = instance.wallet_set.first()
         return wallet.current_balance
 
@@ -70,3 +71,6 @@ class UserDetailSerializer(ModelSerializer):
 
     def get_referrers_count(self, obj):
         return Referral.objects.filter(user=obj).first().used_count
+
+    def get_referral_code(self, obj):
+        return Referral.objects.filter(user=obj).first().code

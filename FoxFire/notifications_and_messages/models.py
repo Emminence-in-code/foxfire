@@ -11,6 +11,7 @@ from helpers.format_date import format_time_ago
 class Notifications(models.Model):
     notification = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    title = models.TextField(default="New Notification")
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     read = models.BooleanField(default=False)
 
@@ -25,7 +26,7 @@ class Notifications(models.Model):
 
 class Messages(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name="sender")
-    reciever = models.CharField(max_length=200,default='admin')
+    reciever = models.CharField(max_length=200, default="admin")
     # todo should be created based on the contetatenation of the two users in the chat as a slug or the name of the group or room holding a meeting
     message = models.TextField()
     time = models.DateTimeField(auto_now_add=True)
@@ -34,3 +35,7 @@ class Messages(models.Model):
     def read(self):
         self.read = True
         self.save()
+
+
+def send_notification(title,user,notification):
+    Notifications.objects.create(title = title,user = user,notification = notification).save()

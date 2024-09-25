@@ -3,6 +3,12 @@ from custom_auth.models import CustomUser
 import random, string
 from django.core.exceptions import ValidationError
 
+from api.transacions import deposit
+from notifications_and_messages.models import send_notification
+
+
+submit_types = (("image", "Image"), ("code", "Code"))
+
 
 # Create your models here.
 class Task(models.Model):
@@ -12,7 +18,39 @@ class Task(models.Model):
     link = models.URLField()
     completed = models.ManyToManyField(CustomUser)
     reward = models.IntegerField(default=0)
-    # TODO implement task submission
+    submit_type = models.CharField(max_length=50, choices=submit_types, default="image")
+
+
+class TaskSubmit(models.Model):
+    image = models.ImageField(upload_to="tasks", blank=True, null=True)
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)
+    code = models.CharField(max_length=200, blank=True, null=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    confirmed = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs) -> None:
+        # make sure the upload type matches the task type
+        if self.image and self.code:
+            raise Exception("Cant use both image and code to confirm task")
+        if self.image and not self.task.submit_type == "image":
+            raise Exception("Use code for task submition instead")
+        if self.code and not self.task.submit_type == "code":
+            raise Exception("Use image for task submition instead")
+        if self.confirmed:
+            # credit user with the task rewards
+            self.task.completed.add(self.user)
+            self.task.save()
+            rewards = self.task.reward
+            deposit(wallet=self.user.wallet_set.first(), amount=rewards)
+            send_notification(
+                title="Task completed",
+                user=self.user,
+                notification=f"You have earned {rewards} flame tokens for completing task",
+            )
+        return super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.task.task_name} submit request from {self.user}"
 
 
 class Category(models.Model):
@@ -110,6 +148,7 @@ class WithdrawRequest(models.Model):
     bank_description = models.TextField()
     account_number = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+    confirmed = models.BooleanField(default=False)
 
 
 class ExchangeRate(models.Model):
@@ -135,6 +174,4 @@ class Referral(models.Model):
     def save(self, *args, **kwargs) -> None:
         if not self.code:
             self.code = self.generate_code()
-            print(self.code)
-
         return super().save(*args, **kwargs)

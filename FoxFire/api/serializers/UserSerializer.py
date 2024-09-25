@@ -6,6 +6,8 @@ from rest_framework.serializers import (
     BaseSerializer,
 )
 from custom_auth.validators import validate_username
+from wallet.models import Wallet
+from api.models import *
 
 
 class UserSerializer(ModelSerializer):
@@ -35,6 +37,36 @@ class UserSerializer(ModelSerializer):
 
 
 class UserDetailSerializer(ModelSerializer):
+    balance = SerializerMethodField()
+    completed_tasks_count = SerializerMethodField()
+    completed_surveys_count = SerializerMethodField()
+    referrers_count = SerializerMethodField()
+
     class Meta:
         model = CustomUser
-        exclude = ("id", "password")
+        fields = [
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "profile_picture",
+            "is_staff",
+            "balance",
+            "completed_tasks_count",
+            "completed_surveys_count",
+            "referrers_count",
+        ]
+
+    def get_balance(self, instance):
+        print(instance.wallet_set.first())
+        wallet: Wallet = instance.wallet_set.first()
+        return wallet.current_balance
+
+    def get_completed_tasks_count(self, obj):
+        return Task.objects.filter(completed=obj).count()
+
+    def get_completed_surveys_count(self, obj):
+        return SurveyCompletion.get_completed_surveys_count(obj)
+
+    def get_referrers_count(self, obj):
+        return Referral.objects.filter(user=obj).first().used_count

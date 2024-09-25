@@ -1,3 +1,4 @@
+from rest_framework.views import APIView
 from django.shortcuts import render
 from custom_auth.models import CustomUser
 from rest_framework import generics
@@ -7,6 +8,9 @@ from rest_framework import views
 from rest_framework import status
 from django.shortcuts import render
 from api.serializers import UserSerializer
+from .transacions import deposit, withdraw
+from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
 
 # from django.contrib.auth import
 from custom_auth.models import CustomUser
@@ -21,13 +25,14 @@ from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate
 from rest_framework.mixins import RetrieveModelMixin
 from rest_framework.permissions import IsAuthenticated
-
-
+from django.db.models import Exists, OuterRef
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from wallet.models import Wallet
 from .models import (
     Task,
     Category,
+    Referral,
     Survey,
     Question,
     UserResponse,
@@ -48,7 +53,7 @@ from .serializers.serializers import (
     ExchangeRateSerializer,
 )
 
-from api.serializers.UserSerializer import UserSerializer
+from api.serializers.UserSerializer import UserSerializer, UserDetailSerializer
 
 
 # Create your views here.
@@ -57,10 +62,6 @@ from api.serializers.UserSerializer import UserSerializer
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     queryset = CustomUser.objects.all()
-
-    def get(self, request, *args, **kwargs):
-        print("yoo")
-        return Response()
 
     def post(self, request, *args, **kwargs):
         if CustomUser.objects.filter(username=request.data.get("username")).exists():
@@ -89,6 +90,15 @@ class CreateUserView(generics.CreateAPIView):
                 "email": user_obj.email,
                 "image": "",
             }
+            # handle referrer
+            try:
+                if request.data.get("referral_code"):
+                    ref = Referral.objects.get(code=request.data.get("referral_code"))
+                    ref.use_code()
+                    deposit(ref.user.wallet_set.first(), 300)
+            except:
+                pass
+
             return Response(response_data, status=status.HTTP_201_CREATED)
         except CustomUser.DoesNotExist:
             return Response(
@@ -157,9 +167,19 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 
 class SurveyViewSet(viewsets.ModelViewSet):
-    queryset = Survey.objects.all()
     serializer_class = SurveySerializer
     permission_classes = [IsAuthenticated]
+    queryset = Survey.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        return Survey.objects.filter(
+            ~Exists(
+                SurveyCompletion.objects.filter(
+                    user=user, survey=OuterRef("pk"), completed=True
+                )
+            )
+        )
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
@@ -200,8 +220,108 @@ class WithdrawRequestViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return WithdrawRequest.objects.filter(user=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        # Deserialize and validate the incoming data
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Get the validated data and the user's wallet
+        data = serializer.validated_data
+        user_wallet = self.request.user.wallet_set.first()
+        if data.get("amount") == 0:
+            return Response({"error": "cant withdrwa zero balance"}, status=400)
+        # Perform the withdrawal action
+        x = withdraw(user_wallet, data.get("amount"))
+
+        # Check the withdrawal result and return the appropriate response
+        if x:
+            # If withdrawal is successful, save the serializer
+            serializer.save(user=self.request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            # If withdrawal fails, return an error response
+            return Response(
+                {"error": "Insufficient balance"}, status=status.HTTP_403_FORBIDDEN
+            )
+
 
 class ExchangeRateViewSet(viewsets.ModelViewSet):
     queryset = ExchangeRate.objects.all()
     serializer_class = ExchangeRateSerializer
     permission_classes = [IsAuthenticated]
+
+
+class GetUserApiView(RetrieveModelMixin, generics.GenericAPIView):
+    serializer_class = UserDetailSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = ""
+
+    def get_queryset(self):
+        # Return a queryset with just the authenticated user
+        return self.request.user
+
+    def get_object(self):
+        # Get the first object from the queryset
+        queryset = self.get_queryset()
+        return queryset
+
+    def get(self, request, *args, **kwargs):
+        # Handle GET request
+        return self.retrieve(request, *args, **kwargs)
+
+
+class DeleteUserAccountView(APIView):
+    """
+    GET endpoint to delete the currently authenticated user's account.
+    """
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        user.delete()
+        return Response(
+            {"message": "User account deleted successfully."}, status=status.HTTP_200_OK
+        )
+
+
+class SubmitSurveyResponse(APIView):
+    def post(self, request, survey_id):
+        survey = get_object_or_404(Survey, id=survey_id)
+        user = request.user
+
+        # Expect a dictionary of question_id: answer pairs
+        answers = request.data.get("answers", {})
+
+        answered_questions_count = 0  # Counter for the current answered questions
+
+        for question_id, answer in answers.items():
+            question = survey.questions.filter(id=question_id).first()
+            if question and answer:
+                # Update or create the user response
+                UserResponse.objects.update_or_create(
+                    user=user, question=question, defaults={"answer": answer}
+                )
+                answered_questions_count += 1  # Increment count for each valid answer
+
+        # Check if all questions in the survey are answered
+        total_questions = survey.questions.count()
+
+        completion, _ = SurveyCompletion.objects.get_or_create(user=user, survey=survey)
+        if (
+            total_questions == answered_questions_count
+        ):  # Compare only with current answers
+            completion.completed = True
+            completion.completed_at = timezone.now()
+            completion.save()
+            # Fund user for completing the survey
+            user_wallet: Wallet = user.wallet_set.first()
+            deposit(user_wallet, survey.reward)
+            return Response(
+                {"completed": True, "answered_questions": answered_questions_count},
+                status=200,
+            )
+
+        completion.save()
+        return Response(
+            {"completed": False, "answered_questions": answered_questions_count},
+            status=200,
+        )

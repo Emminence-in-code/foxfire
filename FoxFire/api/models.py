@@ -1,5 +1,6 @@
 from django.db import models
 from custom_auth.models import CustomUser
+import random, string
 
 
 # Create your models here.
@@ -9,6 +10,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_created=True)
     link = models.URLField()
     completed = models.ManyToManyField(CustomUser)
+    reward = models.IntegerField(default=0)
     # TODO implement task submission
 
 
@@ -25,6 +27,7 @@ class Survey(models.Model):
     title = models.CharField(max_length=100)
     image = models.ImageField(upload_to="surveys")
     description = models.TextField()
+    reward = models.IntegerField(default=0)
 
     def get_total_questions_count(self):
         return self.questions.count()
@@ -99,3 +102,26 @@ class WithdrawRequest(models.Model):
 class ExchangeRate(models.Model):
     points = models.DecimalField(default=1000.00, decimal_places=4, max_digits=8)
     amount = models.DecimalField(default=1, decimal_places=4, max_digits=8)
+
+
+class Referral(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    code = models.CharField(max_length=100, blank=True, null=True)
+    used_count = models.IntegerField(default=0)
+
+    def use_code(self):
+        used_count += 1
+        self.save()
+
+    @staticmethod
+    def generate_code() -> int:
+
+        numbers = random.sample(range(1, 46), 6)
+        return int("".join(map(str, sorted(numbers))))
+
+    def save(self, *args, **kwargs) -> None:
+        if not self.code:
+            self.code = self.generate_code()
+            print(self.code)
+            
+        return super().save(*args, **kwargs)

@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "custom_auth",
     "notifications_and_messages",
+    "wallet",
 ]
 
 MIDDLEWARE = [

@@ -7,8 +7,11 @@ from .models import (
     WithdrawRequest,
     ExchangeRate,
     Survey,
+    Referral,
+    SurveyCompletion,
+    UserResponse,
 )
-
+from wallet.models import Wallet, Transaction
 
 # Register your models here.
 admin.site.register(
@@ -18,7 +21,12 @@ admin.site.register(
         Category,
         Question,
         WithdrawRequest,
+        SurveyCompletion,
+        UserResponse,
         Survey,
         ExchangeRate,
+        Wallet,
+        Transaction,
+        Referral,
     ]
 )

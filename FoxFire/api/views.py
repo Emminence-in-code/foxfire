@@ -178,7 +178,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class SurveyViewSet(viewsets.ModelViewSet):
     serializer_class = SurveySerializer
     permission_classes = [IsAuthenticated]
-    queryset = Survey.objects.all()
+    queryset = Survey.objects.filter(upload_complete = True)
 
     def get_queryset(self):
         user = self.request.user

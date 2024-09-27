@@ -6,7 +6,6 @@ from api.models import (
     Question,
     UserResponse,
     SurveyCompletion,
-    Announcement,
     WithdrawRequest,
     ExchangeRate,TaskSubmit
 )
@@ -61,11 +60,6 @@ class SurveyCompletionSerializer(serializers.ModelSerializer):
         model = SurveyCompletion
         fields = "__all__"
 
-
-class AnnouncementSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Announcement
-        fields = "__all__"
 
 
 class WithdrawRequestSerializer(serializers.ModelSerializer):

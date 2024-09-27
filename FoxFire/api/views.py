@@ -38,7 +38,6 @@ from .models import (
     Question,
     UserResponse,
     SurveyCompletion,
-    Announcement,
     WithdrawRequest,
     ExchangeRate,
     TaskSubmit,
@@ -51,7 +50,6 @@ from .serializers.serializers import (
     UserResponseSerializer,
     SurveyCompletionSerializer,
     TaskSubmitSerializer,
-    AnnouncementSerializer,
     WithdrawRequestSerializer,
     ExchangeRateSerializer,
 )
@@ -178,7 +176,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
 class SurveyViewSet(viewsets.ModelViewSet):
     serializer_class = SurveySerializer
     permission_classes = [IsAuthenticated]
-    queryset = Survey.objects.filter(upload_complete = True)
+    queryset = Survey.objects.filter(upload_complete=True)
 
     def get_queryset(self):
         user = self.request.user
@@ -219,12 +217,6 @@ class SurveyCompletionViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return SurveyCompletion.objects.filter(user=self.request.user)
-
-
-class AnnouncementViewSet(viewsets.ModelViewSet):
-    queryset = Announcement.objects.all()
-    serializer_class = AnnouncementSerializer
-    permission_classes = [IsAuthenticated]
 
 
 class WithdrawRequestViewSet(viewsets.ModelViewSet):

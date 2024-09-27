@@ -20,22 +20,19 @@ class Task(models.Model):
     reward = models.IntegerField(default=0)
     submit_type = models.CharField(max_length=50, choices=submit_types, default="image")
 
+    def __str__(self):
+        return self.task_name
+
 
 class TaskSubmit(models.Model):
-    image = models.ImageField(upload_to="tasks", blank=True, null=True)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
-    code = models.CharField(max_length=200, blank=True, null=True)
+    proof_of_work = models.CharField(max_length=300, blank=True, null=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     confirmed = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs) -> None:
         # make sure the upload type matches the task type
-        if self.image and self.code:
-            raise Exception("Cant use both image and code to confirm task")
-        if self.image and not self.task.submit_type == "image":
-            raise Exception("Use code for task submition instead")
-        if self.code and not self.task.submit_type == "code":
-            raise Exception("Use image for task submition instead")
+
         if self.confirmed:
             # credit user with the task rewards
             self.task.completed.add(self.user)
@@ -59,6 +56,9 @@ class Category(models.Model):
 
     class Meta:
         verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.category
 
 
 class Survey(models.Model):
@@ -85,6 +85,9 @@ class Survey(models.Model):
                 )
 
         super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
 
 
 class Question(models.Model):
@@ -134,26 +137,21 @@ class SurveyCompletion(models.Model):
         return cls.objects.filter(user=user, completed=True).count()
 
 
-class Announcement(models.Model):
-    image = models.ImageField(
-        upload_to="images", help_text="icon image for announcement"
-    )
-    title = models.CharField(max_length=100)
-    description = models.TextField()
-
-
 class WithdrawRequest(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    amount = models.DecimalField(decimal_places=4, max_digits=8)
+    amount = models.DecimalField(decimal_places=1, max_digits=20)
     bank_description = models.TextField()
     account_number = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     confirmed = models.BooleanField(default=False)
 
+    def __str__(self):
+        return f"{self.user.username} wants to withdraw {self.amount}"
+
 
 class ExchangeRate(models.Model):
-    points = models.DecimalField(default=1000.00, decimal_places=4, max_digits=8)
-    amount = models.DecimalField(default=1, decimal_places=4, max_digits=8)
+    points = models.DecimalField(default=1000.00, decimal_places=4, max_digits=20)
+    amount = models.DecimalField(default=1, decimal_places=4, max_digits=20)
 
 
 class Referral(models.Model):

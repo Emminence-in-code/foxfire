@@ -8,7 +8,6 @@ from .views import (
     QuestionViewSet,
     UserResponseViewSet,
     SurveyCompletionViewSet,
-    AnnouncementViewSet,
     WithdrawRequestViewSet,
     ExchangeRateViewSet,
     CustomLoginView,
@@ -28,7 +27,6 @@ router.register(r"surveys", SurveyViewSet)
 router.register(r"questions", QuestionViewSet)
 router.register(r"user-responses", UserResponseViewSet)
 router.register(r"survey-completions", SurveyCompletionViewSet)
-router.register(r"announcements", AnnouncementViewSet)
 router.register(r"withdraw-requests", WithdrawRequestViewSet)
 router.register(r"exchange-rates", ExchangeRateViewSet)
 

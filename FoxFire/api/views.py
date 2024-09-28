@@ -64,6 +64,8 @@ import random
 class CreateUserView(generics.CreateAPIView):
     serializer_class = UserSerializer
     queryset = CustomUser.objects.all()
+    authentication_classes = []
+    permission_classes = []
 
     def post(self, request, *args, **kwargs):
         if CustomUser.objects.filter(username=request.data.get("username")).exists():

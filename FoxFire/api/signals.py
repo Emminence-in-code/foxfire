@@ -7,19 +7,20 @@ from api.transacions import deposit
 from .models import Referral
 from api.models import WithdrawRequest, ExchangeRate, Task, Survey
 from custom_auth.models import CustomUser
+
 User = settings.AUTH_USER_MODEL
 from notifications_and_messages.models import send_notification
 
 
-@receiver(post_save, sender=User)
-def create_profile_on_save(sender, instance: User, created, *args, **kwargs):
+@receiver(post_save, sender=CustomUser)
+def create_profile_on_save(sender, instance: CustomUser, created, *args, **kwargs):
     if not instance.wallet_set.exists():
         instance.wallet_set.create()
     if not instance.referral_set.exists():
         Referral.objects.create(user=instance).save()
     if created:
         send_notification(
-            "Welcome {username}".format(instance.username),
+            f"Welcome {instance.username}",
             instance,
             "Your sign up has been completed succesfully,start taking surveys to earn flame tokens",
         )

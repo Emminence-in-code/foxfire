@@ -30,6 +30,7 @@ class UserSerializer(ModelSerializer):
             username = username.replace(" ", "")
         validated_data["username"] = username
         password = validated_data.pop("password")
+        print(password,'password')
         user = CustomUser.objects.create(**validated_data)
         user.set_password(password)
         user.save()

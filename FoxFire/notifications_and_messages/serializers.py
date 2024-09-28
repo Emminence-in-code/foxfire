@@ -7,16 +7,16 @@ ModelSerializer = serializers.ModelSerializer
 MethodField = serializers.SerializerMethodField
 
 
-
 class NotificationSerializer(ModelSerializer):
-    username = serializers.CharField(source='user.username',read_only=True)
+    username = serializers.CharField(source="user.username", read_only=True)
+
     class Meta:
         model = Notifications
         fields = (
-            'notification',
-            'user',
-            'username',
-            'read',
-            'formated_time'
+            "title",
+            "notification",
+            "user",
+            "username",
+            "read",
+            "formated_time",
         )
-

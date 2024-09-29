@@ -136,6 +136,9 @@ class GetUserApiView(RetrieveModelMixin, generics.GenericAPIView):
 
 
 class CustomLoginView(TokenObtainPairView):
+    authentication_classes = []
+    permission_classes = []
+
     def post(self, request, *args, **kwargs):
         email = request.data.get("email")
         password = request.data.get("password")

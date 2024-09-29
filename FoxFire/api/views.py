@@ -12,6 +12,7 @@ from notifications_and_messages.models import send_notification
 from .transacions import deposit, withdraw
 from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
+from rest_framework.parsers import MultiPartParser, FormParser
 
 # from django.contrib.auth import
 from custom_auth.models import CustomUser
@@ -353,5 +354,16 @@ class GetAdsRewardView(APIView):
             user=self.request.user,
             notification="You have earned from watching ads,check your balance",
         )
-
         return Response()
+
+
+class ProfileImageUpdateView(APIView):
+    parser_classes = (MultiPartParser, FormParser)
+    permission_classes = [IsAuthenticated]
+
+    def put(self, request, format=None):
+        serializer = UserDetailSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

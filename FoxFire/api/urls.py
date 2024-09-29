@@ -14,6 +14,7 @@ from .views import (
     GetUserApiView,
     CreateUserView,
     DeleteUserAccountView,
+    ProfileImageUpdateView,
     SubmitSurveyResponse,
     GetAdsRewardView,
     TaskSubmitViewSet,
@@ -42,5 +43,6 @@ urlpatterns = [
     path("auth/login", CustomLoginView.as_view()),
     path("auth/refresh", TokenRefreshView.as_view()),
     path("auth/verify", TokenVerifyView.as_view()),
+    path("update-image", ProfileImageUpdateView.as_view()),
     path("submit-survey/<int:survey_id>", SubmitSurveyResponse.as_view()),
 ]

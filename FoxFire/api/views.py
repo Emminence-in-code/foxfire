@@ -290,7 +290,7 @@ class DeleteUserAccountView(APIView):
 
     def get(self, request, *args, **kwargs):
         user = request.user
-        user.delete()
+        CustomUser.objects.get(username=user.username).delete()
         return Response(
             {"message": "User account deleted successfully."}, status=status.HTTP_200_OK
         )

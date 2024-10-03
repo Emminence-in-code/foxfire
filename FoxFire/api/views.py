@@ -100,7 +100,7 @@ class CreateUserView(generics.CreateAPIView):
                 if request.data.get("referral_code"):
                     ref = Referral.objects.get(code=request.data.get("referral_code"))
                     ref.use_code()
-                    deposit(ref.user.wallet_set.first(), 300)
+                    deposit(ref.user.wallet_set.first(), 100)
                     send_notification(
                         title="Invitation accepted",
                         user=ref.user,
@@ -242,7 +242,7 @@ class WithdrawRequestViewSet(viewsets.ModelViewSet):
         data = serializer.validated_data
         user_wallet = self.request.user.wallet_set.first()
         if data.get("amount") == 0:
-            return Response({"error": "cant withdrwa zero balance"}, status=400)
+            return Response({"error": "cant withdraw zero balance"}, status=400)
         # Perform the withdrawal action
         x = withdraw(user_wallet, data.get("amount"))
 
@@ -350,7 +350,7 @@ class GetAdsRewardView(APIView):
 
     def get(self, request, *args, **kwargs):
         user_wallet = request.user.wallet_set.first()
-        reward = random.randint(200, 300)
+        reward = random.randint(10, 100)
         deposit(user_wallet, reward)
         send_notification(
             title="Ads Rewarded",

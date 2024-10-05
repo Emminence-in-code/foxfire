@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 
 from api.transacions import deposit
 from notifications_and_messages.models import send_notification
-
+from forgot_password.generate_token import generate_token
 
 submit_types = (("image", "Image"), ("code", "Code"))
 
@@ -166,8 +166,8 @@ class Referral(models.Model):
     @staticmethod
     def generate_code() -> int:
 
-        numbers = random.sample(range(1, 46), 6)
-        return int("".join(map(str, sorted(numbers))))
+        numbers = random.sample(range(1, 9), 6)
+        return generate_token(6, False)
 
     def save(self, *args, **kwargs) -> None:
         if not self.code:

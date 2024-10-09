@@ -140,8 +140,8 @@ class SurveyCompletion(models.Model):
 class WithdrawRequest(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     amount = models.DecimalField(decimal_places=1, max_digits=20)
-    bank_description = models.TextField()
-    account_number = models.CharField(max_length=100)
+    wallet_address = models.TextField(help_text='USDT TRC 20 WALLET ADDRESS')
+    confirmed_account = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     confirmed = models.BooleanField(default=False)
 

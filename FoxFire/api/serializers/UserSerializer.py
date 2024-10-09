@@ -22,6 +22,7 @@ class UserSerializer(ModelSerializer):
             "last_name",
             "phone_number",
             "password",
+            "country",
         ]
 
     def create(self, validated_data):
@@ -59,6 +60,7 @@ class UserDetailSerializer(ModelSerializer):
             "completed_surveys_count",
             "referrers_count",
             "referral_code",
+            "country",
         ]
 
     def get_balance(self, instance):

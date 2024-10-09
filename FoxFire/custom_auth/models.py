@@ -23,6 +23,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     verified_email_address = models.BooleanField(default=False)
     profile_picture = models.ImageField(upload_to="files")
     USERNAME_FIELD = "email"
+    country = models.CharField(blank=True,null=True,default='Nigeria',max_length=200)
     REQUIRED_FIELDS = [
         "username",
     ]

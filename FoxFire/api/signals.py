@@ -76,9 +76,7 @@ def delete_withdraw_request(sender, instance: WithdrawRequest, *args, **kwargs):
         send_notification(
             title="Withdraw Request Denied",
             user=instance.user,
-            notification="Unfortunately u cannot withdraw at this moment,{amount} will be returned to your wallet".format(
-                instance.amount
-            ),
+            notification=f"Unfortunately u cannot withdraw at this moment,{instance.amount} will be returned to your wallet"
         )
         # send back funds to user
         deposit(amount=instance.amount, wallet=instance.user.wallet_set.first())

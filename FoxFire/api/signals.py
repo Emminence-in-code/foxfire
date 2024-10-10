@@ -89,5 +89,5 @@ def notify_rates_request(sender, instance: ExchangeRate, created, *args, **kwarg
         send_notification(
             title="Update in Rates",
             user=user,
-            notification="Exchange rates has been updated,check it out to see if its in your favour",
+            notification="Exchange rates has been updated.",
         )

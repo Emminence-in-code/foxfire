@@ -206,6 +206,20 @@ class TaskSubmitViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSubmitSerializer
     permission_classes = [IsAuthenticated]
 
+    def perform_create(self, serializer):
+        data = serializer.validated_data
+        task:Task= data.get('task')
+        print(data)
+        data['confirmed'] = True
+        print(data)
+
+        task.save()
+        # user = CustomUser.objects.get(id = data.get('user'))
+        task.completed.add(data.get('user'))
+        task.save()
+        # raise Exception()
+        return super().perform_create(serializer)
+
 
 class UserResponseViewSet(viewsets.ModelViewSet):
     queryset = UserResponse.objects.all()
